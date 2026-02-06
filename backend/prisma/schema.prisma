@@ -1,0 +1,101 @@
+
+datasource db {
+  provider = "postgresql" 
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+model User {
+  id             String   @id @default(uuid())
+  username       String   @unique
+  email          String   @unique
+  password       String
+  name           String
+  bio            String?
+  profilePicture String?
+  role           Role     @default(USER)
+
+  blogs          Blog[]
+  comments       Comment[]
+  ratings        BlogRating[]
+  likes          Like[]
+
+  followers      Follow[] @relation("followers")
+  following      Follow[] @relation("following")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Blog {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  tags      String[]
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+
+  comments  Comment[]
+  ratings   BlogRating[]
+  likes     Like[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogRating {
+  id     String @id @default(uuid())
+  value  Int
+  userId String
+  blogId String
+
+  user User @relation(fields: [userId], references: [id])
+  blog Blog @relation(fields: [blogId], references: [id])
+
+  @@unique([userId, blogId])
+  createdAt DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  userId    String
+  blogId    String
+
+  user User @relation(fields: [userId], references: [id])
+  blog Blog @relation(fields: [blogId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id     String @id @default(uuid())
+  userId String
+  blogId String
+
+  user User @relation(fields: [userId], references: [id])
+  blog Blog @relation(fields: [blogId], references: [id])
+
+  @@unique([userId, blogId])
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  id          String @id @default(uuid())
+  followerId  String
+  followingId String
+
+  follower  User @relation("followers", fields: [followerId], references: [id])
+  following User @relation("following", fields: [followingId], references: [id])
+
+  @@unique([followerId, followingId])
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  USER
+}
